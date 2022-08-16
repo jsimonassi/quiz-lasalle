@@ -1,4 +1,4 @@
-#define LEDS_COUNT 4
+#define LEDS_COUNT 3
 
 #define DEBUGGER_MODE 1
 #define QUIZ_MODE 2
@@ -41,7 +41,7 @@ int quiz_finished = false;
 
 void setup() {
 
-  for (int i = 0; i < LEDS_COUNT; i++){
+  for (int i = 0; i < 4; i++){
     pinMode(NEGATIVE_LEDS[i], OUTPUT);
   }
 
@@ -63,7 +63,7 @@ void setup() {
 void loop() {
 
   // Define as portas lógicas digitais e analógicas como LOW para usar como GND
-  for(int i = 0; i < LEDS_COUNT; i++){
+  for(int i = 0; i < 4; i++){
     digitalWrite(NEGATIVE_LEDS[i], LOW);
   }
   
