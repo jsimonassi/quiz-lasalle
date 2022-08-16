@@ -33,8 +33,8 @@ int YELLOW_BUTTON = 11;
 int MASTER_BUTTON = 13;
 int BUZZER = 12;
 
-int BUTTONS[4] = {BLUE_BUTTON, GREEN_BUTTON, RED_BUTTON, YELLOW_BUTTON};
-int LEDS[LEDS_COUNT] = {POSITIVE_BLUE_LED, POSITIVE_GREEN_LED, POSITIVE_RED_LED, POSITIVE_YELLOW_LED};
+int BUTTONS[4] = {GREEN_BUTTON, YELLOW_BUTTON, RED_BUTTON, BLUE_BUTTON};
+int LEDS[4] = {POSITIVE_GREEN_LED, POSITIVE_YELLOW_LED, POSITIVE_RED_LED, POSITIVE_BLUE_LED};
 
 //QuizMode
 int quiz_finished = false;
@@ -82,6 +82,15 @@ void loop() {
   }
 
   if(digitalRead(MASTER_BUTTON) == LOW){
+    __changeMode();
+  }
+}
+
+void __changeMode(){
+    if(execution_mode == GENIUS_MODE){
+      resetGeniusGame();
+    }
+
     playFeedbackSound(); 
     execution_mode++;
     Serial.println(execution_mode);
@@ -92,11 +101,6 @@ void loop() {
     if(execution_mode == QUIZ_MODE){
       quiz_finished = false;
     }
-
-    if(execution_mode == GENIUS_MODE){
-        resetGeniusGame();
-    }
-  }
 }
 
 /**
@@ -134,6 +138,9 @@ void quizMode(){
   }
 } 
 
+/**
+* Em modo Genius, temos um jogo da memória. Ganha quem acertar a sequência.
+*/
 void geniusMode() {
 
   if (end_of_game) {
@@ -148,6 +155,8 @@ void geniusMode() {
   nextRoud();
   playGameSequenceSound();
   waitPlayer();
+  delay(1000);
+
 }
 
 void resetGeniusGame(){
@@ -158,7 +167,7 @@ void resetGeniusGame(){
 }
 
 void nextRoud(){
-    int sorted_number = random(0, 4);
+    int sorted_number = random(0, LEDS_COUNT);
     sequence[current_round++] = sorted_number;
 }
 
@@ -166,12 +175,10 @@ void playGameSequenceSound() {
   for (int i = 0; i < current_round; i++) {
 
     tone(BUZZER, NOTES[sequence[i]]);
-    //TODO: Acender o led aqui
-    //digitalWrite(pinosLeds[sequencia[i]], HIGH);
+    __turnLedOn(LEDS[sequence[i]]);
     delay(500);
     noTone(BUZZER);
-    //TODO: Apagar o led aqui
-    //digitalWrite(pinosLeds[sequencia[i]], LOW);
+    __turnLedOff(LEDS[sequence[i]]);
     delay(100);
   }
   noTone(BUZZER);
@@ -194,21 +201,19 @@ void __waitPlay(){
 
   while (!user_played) {
     for (int i = 0; i < LEDS_COUNT; i++) {
-      //if (digitalRead(pinosBotoes[i]) == HIGH) {
-        // Dizendo qual foi o botao pressionado.
-
+      if(digitalRead(BUTTONS[i]) == LOW) {
         button_pressed = i;
-
         tone(BUZZER, NOTES[i]);
-        //TODO: acender led
-        //digitalWrite(pinosLeds[i], HIGH);
+        __turnLedOn(LEDS[i]);
         delay(300);
-        //TODO: acender led
-        //digitalWrite(pinosLeds[i], LOW);
+        __turnLedOff(LEDS[i]);
         noTone(BUZZER);
-
         user_played = true;
-      //}
+      }
+      if(digitalRead(MASTER_BUTTON) == LOW){
+        __changeMode();
+        return;
+      }
     }
     delay(10);
   }
@@ -220,75 +225,69 @@ void __checkPlay(){
 
     for (int i = 0; i < LEDS_COUNT; i++) {
       tone(BUZZER, NOTES[i]);
-      //digitalWrite(pinosLeds[i], HIGH);
+      __turnLedOn(LEDS[i]);
       delay(200);
-      //digitalWrite(pinosLeds[i], LOW);
+      __turnLedOff(LEDS[i]);
       noTone(BUZZER);
     }
 
     tone(BUZZER, NOTES[3]);
 
     for (int i = 0; i < LEDS_COUNT; i++) {
-
-    //   digitalWrite(pinosLeds[0], HIGH);
-    //   digitalWrite(pinosLeds[1], HIGH);
-    //   digitalWrite(pinosLeds[2], HIGH);
-    //   digitalWrite(pinosLeds[3], HIGH);
-    //   delay(100);
-
-    //   digitalWrite(pinosLeds[0], LOW);
-    //   digitalWrite(pinosLeds[1], LOW);
-    //   digitalWrite(pinosLeds[2], LOW);
-    //   digitalWrite(pinosLeds[3], LOW);
-    //   delay(100);
+      __turnLedOn(LEDS[0]);
+      __turnLedOn(LEDS[1]);
+      __turnLedOn(LEDS[2]);
+      __turnLedOn(LEDS[3]);
+      delay(100);
+      __turnLedOff(LEDS[0]);
+      __turnLedOff(LEDS[1]);
+      __turnLedOff(LEDS[2]);
+      __turnLedOff(LEDS[3]);
     }
-
     noTone(BUZZER);
     end_of_game = true;
   }
 }
 
 void playStartSound(){
-   tone(BUZZER, NOTES[0]);
+    tone(BUZZER, NOTES[0]);
 
-//   digitalWrite(pinosLeds[0], HIGH);
-//   digitalWrite(pinosLeds[1], HIGH);
-//   digitalWrite(pinosLeds[2], HIGH);
-//   digitalWrite(pinosLeds[3], HIGH);
-
-  delay(500);
-
-//   digitalWrite(pinosLeds[0], LOW);
-//   digitalWrite(pinosLeds[1], LOW);
-//   digitalWrite(pinosLeds[2], LOW);
-//   digitalWrite(pinosLeds[3], LOW);
-  delay(500);
-  noTone(BUZZER);
+    __turnLedOn(LEDS[0]);
+    __turnLedOn(LEDS[1]);
+    __turnLedOn(LEDS[2]);
+    __turnLedOn(LEDS[3]);
+    delay(500);
+    __turnLedOff(LEDS[0]);
+    __turnLedOff(LEDS[1]);
+    __turnLedOff(LEDS[2]);
+    __turnLedOff(LEDS[3]);
+   delay(500);
+   noTone(BUZZER);
 }
 
 void playFeedbackSound() {
-  tone(BUZZER, NOTE_A5);
-  delay(50);
-  noTone(BUZZER);
-  delay(50);
-  tone(BUZZER, NOTE_A5);
-  delay(50);
-  noTone(BUZZER);
-  delay(50); 
-  tone(BUZZER, NOTE_A5);
-  delay(50);
-  noTone(BUZZER);
-  delay(50);  
-  tone(BUZZER, NOTE_A5);
-  delay(50);
-  noTone(BUZZER);
-  delay(50);  
+    tone(BUZZER, NOTE_A5);
+    delay(50);
+    noTone(BUZZER);
+    delay(50);
+    tone(BUZZER, NOTE_A5);
+    delay(50);
+    noTone(BUZZER);
+    delay(50); 
+    tone(BUZZER, NOTE_A5);
+    delay(50);
+    noTone(BUZZER);
+    delay(50);  
+    tone(BUZZER, NOTE_A5);
+    delay(50);
+    noTone(BUZZER);
+    delay(50);  
 }
 
 void playLongFeedbackkSound() {
-  tone(BUZZER, NOTE_D4);
-  delay(2000);
-  noTone(BUZZER);
+    tone(BUZZER, NOTE_D4);
+    delay(2000);
+    noTone(BUZZER);
 }
 
 /**
